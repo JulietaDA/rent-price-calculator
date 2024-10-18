@@ -1,0 +1,14 @@
+{
+    "airflow_variables_usd": {
+        "blue": {
+            "casa": "blue",
+            "schedule": "0 20 * * *", 
+            "table_sufix": "blue"
+        },
+        "mep": {
+            "casa": "bolsa",
+            "schedule": "0 20 * * *",
+            "table_sufix": "mep"
+        }
+    }
+}
