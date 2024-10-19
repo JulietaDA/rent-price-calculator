@@ -15,7 +15,7 @@ def get_installed_packages():
 
 def get_requirements():
     """Get a dictionary of packages and their versions from requirements.txt."""
-    req_path = '/requirements.txt'
+    req_path = os.path.join(os.path.dirname(__file__), '../requirements.txt')
     with open(req_path, 'r') as f:
         requirements = {}
         for line in f:
