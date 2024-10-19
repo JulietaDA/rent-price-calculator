@@ -104,7 +104,7 @@ Asegúrate de tener instalados los siguientes programas en tu máquina:
 
     En la interfaz de Airflow, verás una lista de los DAGs disponibles. Primero los DAGs relacionados con las variables que economicas (`principalesVars_ICL`, `principalesVars_IPC`, `principalesVars_usdOficial`, `usd_blue`, `usd_mep`) haciendo clic en el interruptor de activación en la columna "On/Off". Luego, el de `calculate_rent_price`.
 
-    En la práctica, se pueden dejar todos los DAGs activos. La razón para activar primero los de variables económicas es que se deben popular las tablas antes de poder calcular los inputs de la tabla de `alquiler`.
+    En la práctica, se pueden dejar todos los DAGs activos. La razón para activar primero los de variables económicas es que se deben popular las tablas antes de poder calcular los inputs de la tabla de `alquiler`. En este caso se estableció el 2023-12-31 como fecha inicial para popular las tablas.
 
 <p align="center">
     <img src="images/DAGS.png" width="900"/>
