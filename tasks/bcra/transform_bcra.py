@@ -1,15 +1,11 @@
 import pandas as pd
 
-# Incorporar una llamada a GET api.bcra.gob.ar/estadisticas/v2.0/principalesvariables para obtener cdSerie y descripcion
-# En la tabla final deberiamos encontrar la descripcion --> Crear una base de datos SQL (por ejemplo, PostgreSQL), a la cual se le puede cargar una tabla manualmente, y utilizarla en el script.(Se puede colocar la creación en el docker-compose o dejando instrucciones de cómo crearla).
-# Esto termina generando un esquema estrella tmb
-
-
 def transform_data(ti, **context):
     df = ti.xcom_pull(task_ids='extract_data')
     if df is None:  # Check if extraction was successful
         raise ValueError("No data extracted. Aborting transformation.")
 
+    # Genero una variable de particion del bcra en funcion de la fecha del registro
     df.rename(columns={'fecha':'partition_date_bcra'}, inplace=True)
 
     # Get the partition date from the DAG's execution context

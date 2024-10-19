@@ -18,22 +18,22 @@ def load(ti, **context):
     host = config['database']['host']
     port = config['database']['port']
     database = config['database']['dbname']
-    db_user = os.getenv('DB_USER')  # Información sensible desde variables de entorno
+    db_user = config['database']['dbuser']  
     db_password = os.getenv('DB_PASSWORD')  # Información sensible desde variables de entorno
 
     # Definir esquema y nombres de tablas
-    schema_name = f"{db_user}_schema"  # Cambia esto al nombre de esquema deseado
-    table_name = f"alquiler"  # Reemplaza con el nombre real de la tabla
+    schema_name = f"{db_user}_schema" 
+    table_name = f"alquiler" 
 
     # Obtener el DataFrame de XCom
     df = ti.xcom_pull(task_ids='transform')
-    if df is None:  # Verificar si la extracción fue exitosa
+    if df is None:  # Verificar que no este vacio
         raise ValueError("No se extrajeron datos. Abortando la transformación.")
 
     partition_date = df['partition_date'].unique()[0]
     print('partition_date: ', partition_date)
 
-    # Crear la URL de conexión para SQLAlchemy (compatible con Redshift)
+    # Crear la URL de conexión 
     database_url = f"postgresql+psycopg2://{db_user}:{db_password}@{host}:{port}/{database}"
 
     try:
@@ -51,7 +51,7 @@ def load(ti, **context):
                 result = connection.execute(text(schema_check_query), {"schema_name": schema_name})
 
                 if not result.fetchone():
-                    # Intentar crear el esquema. Redshift no tiene IF NOT EXISTS, así que ignoramos errores si ya existe
+                    # Intentar crear el esquema
                     connection.execute(text(f"CREATE SCHEMA {schema_name};"))
                     print(f"Esquema '{schema_name}' creado exitosamente.")
             except Exception as e:
@@ -92,7 +92,7 @@ def load(ti, **context):
                 """))                
             print(f"Tabla '{table_name}' creada exitosamente.")
 
-            # Eliminar datos existentes para la fecha de partición
+            # Eliminar datos existentes para la fecha de partición --> busco que se pueda reejecutar el dag y no haya varios registros para el mismo dia
             delete_query = f"""
                 DELETE FROM "{schema_name}"."{table_name}"
                 WHERE partition_date = :partition_date;
@@ -100,11 +100,11 @@ def load(ti, **context):
             connection.execute(text(delete_query), {"partition_date": partition_date})
             print(f"Datos anteriores para la fecha {partition_date} eliminados.")
 
-        # Insertar nuevos datos en la tabla usando SQLAlchemy
+        # Insertar nuevos datos en la tabla 
         with engine.connect() as conn:
             df.to_sql(
                 table_name,
-                con=conn,  # Usar el objeto de conexión aquí
+                con=conn,  
                 schema=schema_name,
                 if_exists='append',  # Agregar nuevos datos
                 index=False  # No escribir el índice del DataFrame como una columna

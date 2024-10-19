@@ -2,3 +2,4 @@ database:
   host: redshift-pda-cluster.cnuimntownzt.us-east-2.redshift.amazonaws.com
   port: 5439 
   dbname: pda
+  dbuser: 2024_julieta_de_antonio

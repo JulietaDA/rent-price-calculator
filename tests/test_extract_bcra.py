@@ -2,7 +2,7 @@ import pytest
 import requests
 import pandas as pd
 from unittest.mock import patch
-from tasks.bcra.extract_bcra import extract_data  # Ajusta la importación según tu estructura de directorios
+from tasks.bcra.extract_bcra import extract_data 
 
 # Ejemplo de datos simulados que podría devolver la API
 mock_api_response = {
@@ -23,7 +23,7 @@ def test_extract_data_success():
 
         # Contexto de Airflow simulado
         context = {
-            'ds': '2024-10-05'  # Cambia la fecha según sea necesario
+            'ds': '2024-10-05'
         }
 
         # Llamar a la función

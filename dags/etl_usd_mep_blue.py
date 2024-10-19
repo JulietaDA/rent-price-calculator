@@ -6,27 +6,27 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.models import Variable
 from datetime import datetime
 
-# Add the parent directory to the path
+# Agrego el directorio principal al path para poder importar módulos de la carpeta tasks
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
+# Importo las funciones desde la carpeta tasks/usd/
 from tasks.usd.extract_usd import extract_data
 from tasks.usd.transform_usd import transform_data
 from tasks.usd.load_usd import load_data_to_redshift
 
+# Función para cargar variables relacionadas con usd paralelo desde un archivo JSON a las variables de Airflow
 def load_usd_variables_from_json(file_path):
     with open(file_path, 'r') as file:
         variables = json.load(file)
-        # Maneja solo las variables relacionadas con "airflow_variables_usd"
         if "airflow_variables_usd" in variables:
-            Variable.delete("airflow_variables_usd")  # Elimina solo la clave relevante
-            Variable.set("airflow_variables_usd", json.dumps(variables["airflow_variables_usd"])) 
+            Variable.delete("airflow_variables_usd")  # Elimina la variable existente en Airflow si existe
+            Variable.set("airflow_variables_usd", json.dumps(variables["airflow_variables_usd"])) # Configura la nueva variable
 
-# Load environment variables and Airflow variables from the JSON file
+# Cargar variables de entorno desde el archivo JSON
 load_usd_variables_from_json('./airflow_variables/airflow_variables_usd.json')
 
-# Obtén las variables cargadas de Airflow
+# Para cada variable de BCRA, crear un DAG dinámico
 variables_usd = Variable.get("airflow_variables_usd", deserialize_json=True)
-
 
 for var_name, var_config in variables_usd.items():
     casa = var_config['casa']
@@ -54,27 +54,28 @@ for var_name, var_config in variables_usd.items():
             task_id=f'extract_data',
             python_callable=extract_data,
             op_kwargs={
-                'casa': casa  # Pasar el idvariable desde la Variable de Airflow
+                'casa': casa  
             },
-            provide_context=True,  # Ensure context is provided
+            provide_context=True,  
         )
 
         transform_task = PythonOperator(
             task_id=f'transform_data',
             python_callable=transform_data,
-            provide_context=True,  # You can also provide context here if needed
+            provide_context=True, 
         )
 
         load_task = PythonOperator(
             task_id=f'load_data_to_redshift',
             python_callable=load_data_to_redshift,
             op_kwargs={
-                'table_sufix': table_sufix   # Pasar el nombre de la tabla
+                'table_sufix': table_sufix   
             },            
             provide_context=True,  
         )
 
-        extract_task >> transform_task >> load_task  # Set task dependencies
+        # Defino el orden de las tareas en el DAG
+        extract_task >> transform_task >> load_task  
 
-        # Registra el DAG dinámicamente
+        # Registrar el DAG dinámicamente en el entorno de ejecución de Airflow
         globals()[f'dag_{var_name}'] = dag        

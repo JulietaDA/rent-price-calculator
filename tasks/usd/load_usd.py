@@ -18,12 +18,12 @@ def load_data_to_redshift(table_sufix, ti, **context):
     host = config['database']['host']
     port = config['database']['port']
     database = config['database']['dbname']
-    db_user = os.getenv('DB_USER')  # Información sensible desde variables de entorno
+    db_user = config['database']['dbuser'] 
     db_password = os.getenv('DB_PASSWORD')  # Información sensible desde variables de entorno
 
     # Definir esquema y nombres de tablas
-    schema_name = f"{db_user}_schema"  # Cambia esto al nombre de esquema deseado
-    table_name = f"usd_{table_sufix}"  # Reemplaza con el nombre real de la tabla
+    schema_name = f"{db_user}_schema"  
+    table_name = f"usd_{table_sufix}" 
     print(f"Table name: {table_name}")
 
     # Obtener el DataFrame de XCom
@@ -34,14 +34,14 @@ def load_data_to_redshift(table_sufix, ti, **context):
     partition_date = df['partition_date'].unique()[0]
     print('partition_date: ', partition_date)
 
-    # Crear la URL de conexión para SQLAlchemy (compatible con Redshift)
+    # Crear la URL de conexión 
     database_url = f"postgresql+psycopg2://{db_user}:{db_password}@{host}:{port}/{database}"
 
     try:
         # Crear un motor de SQLAlchemy
         engine = create_engine(database_url)
 
-        # Verificar si el esquema existe, si no, intentamos crearlo (Redshift no soporta IF NOT EXISTS)
+        # Verificar si el esquema existe, si no, intentamos crearlo
         with engine.connect() as connection:
             try:
                 schema_check_query = f"""
@@ -52,7 +52,7 @@ def load_data_to_redshift(table_sufix, ti, **context):
                 result = connection.execute(text(schema_check_query), {"schema_name": schema_name})
 
                 if not result.fetchone():
-                    # Intentar crear el esquema. Redshift no tiene IF NOT EXISTS, así que ignoramos errores si ya existe
+                    # Intentar crear el esquema
                     connection.execute(text(f"CREATE SCHEMA {schema_name};"))
                     print(f"Esquema '{schema_name}' creado exitosamente.")
             except Exception as e:
@@ -84,7 +84,7 @@ def load_data_to_redshift(table_sufix, ti, **context):
                 """))
                 print(f"Tabla '{table_name}' creada exitosamente.")
 
-            # Eliminar datos existentes para la fecha de partición
+            # Eliminar datos existentes para la fecha de partición --> busco que se pueda reejecutar el dag y no haya varios registros para el mismo dia
             delete_query = f"""
                 DELETE FROM "{schema_name}"."{table_name}"
                 WHERE partition_date = :partition_date;
@@ -96,7 +96,7 @@ def load_data_to_redshift(table_sufix, ti, **context):
         with engine.connect() as conn:
             df.to_sql(
                 table_name,
-                con=conn,  # Usar el objeto de conexión aquí
+                con=conn,  
                 schema=schema_name,
                 if_exists='append',  # Agregar nuevos datos
                 index=False  # No escribir el índice del DataFrame como una columna

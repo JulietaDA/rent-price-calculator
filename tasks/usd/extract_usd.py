@@ -5,9 +5,9 @@ from airflow.models import Variable
 from airflow.macros import ds_add, ds_format
 
 def extract_data(casa, **context):
-    # Calculate the dates
+    # Obtengo las fechas
     date = context['ds']
-    fecha = ds_format(ds_add(date, -1), "%Y-%m-%d", "%Y/%m/%d")  # Tienen la misma fecha, porque la idea es que corra de manera diaria
+    fecha = ds_format(ds_add(date, -1), "%Y-%m-%d", "%Y/%m/%d")  # Tienen la misma fecha, porque la idea es que corra para un dia especifico
 
     print('DAG run’s logical date (partition_date): ', date)
     print('Date from the data: ', fecha)

@@ -20,17 +20,17 @@ def extract(**context):
     host = config['database']['host']
     port = config['database']['port']
     database = config['database']['dbname']
-    db_user = os.getenv('DB_USER')  # Información sensible desde variables de entorno
+    db_user = config['database']['dbuser']
     db_password = os.getenv('DB_PASSWORD')  # Información sensible desde variables de entorno
 
-    # Definir esquema
+    # Defino el esquema
     schema_name = f"{db_user}_schema"
 
-    # Crear la URL de conexión para SQLAlchemy (compatible con Redshift)
+    # Crear la URL de conexión
     database_url = f"postgresql+psycopg2://{db_user}:{db_password}@{host}:{port}/{database}"
 
     try:
-        # Crear un motor de SQLAlchemy
+        # Creo un motor de SQLAlchemy
         engine = create_engine(database_url)
 
         # Usar el contexto de conexión
@@ -38,11 +38,12 @@ def extract(**context):
             # Obtener fechas desde las variables de Airflow
             fecha_inicio_str = Variable.get("fecha_inicio")
             fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date()  # Convertir a objeto date
-            fecha_actual = datetime.strptime(ds_add(context['ds'], -13), '%Y-%m-%d').date()
+            fecha_actual = datetime.strptime(context['ds'], '%Y-%m-%d').date()
             print(f"Fecha inicio: {fecha_inicio}")
             print(f"Fecha actual: {fecha_actual}")
 
-            # Consultas SQL con placeholders correctos
+            # Consultas SQL con placeholders
+            # Datos del ICL
             table_icl = pd.read_sql(text(f"""
                 WITH valores AS (
                     SELECT 
@@ -75,6 +76,7 @@ def extract(**context):
                     valores; 
             """), connection, params={"fecha_inicio": fecha_inicio, "fecha_actual": fecha_actual})
 
+            # Datos del dolar oficial 
             table_usd_oficial = pd.read_sql(text(f"""
                 WITH valores AS (
                     SELECT 
@@ -108,6 +110,7 @@ def extract(**context):
                     valores; 
             """), connection, params={"fecha_inicio": fecha_inicio, "fecha_actual": fecha_actual})
 
+            # Inflacion acumulada
             table_ipc = pd.read_sql(text(f"""
                 WITH ipc_values AS (
                     SELECT 
@@ -122,6 +125,7 @@ def extract(**context):
                 FROM ipc_values
             """), connection, params={"fecha_inicio": fecha_inicio, "fecha_actual": fecha_actual})
 
+            # Dolar blue
             table_usd_blue = pd.read_sql(text(f"""
                 WITH valores AS (
                     SELECT 
@@ -155,6 +159,7 @@ def extract(**context):
                     valores; 
             """), connection, params={"fecha_inicio": fecha_inicio, "fecha_actual": fecha_actual})
 
+            # Dolar mep
             table_usd_mep = pd.read_sql(text(f"""
                 WITH valores AS (
                     SELECT 

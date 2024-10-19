@@ -6,21 +6,22 @@ from airflow.operators.python_operator import PythonOperator
 from airflow.models import Variable
 from datetime import datetime
 
-# Add the parent directory to the path
+# Agrego el directorio principal al path para poder importar módulos de la carpeta tasks
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
+# Importo las funciones desde la carpeta tasks/rent/
 from tasks.rent.extract import extract
 from tasks.rent.transform import transform
 from tasks.rent.load import load
 
-# Function to load variables from a JSON file
+# Función para cargar variables desde un archivo JSON a las variables de Airflow
 def load_variables_from_json(file_path):
     with open(file_path, 'r') as file:
         variables = json.load(file)
         for key, value in variables.items():
             Variable.set(key, value) 
 
-# Load environment variables and Airflow variables from the JSON file
+# Cargar variables de entorno desde el archivo JSON
 load_variables_from_json('./airflow_variables/airflow_variables_rent.json')
 
 # Definir el DAG
@@ -44,13 +45,13 @@ with DAG(
         extract_task = PythonOperator(
             task_id=f'extract',
             python_callable=extract,
-            provide_context=True,  # Ensure context is provided
+            provide_context=True, 
         )
 
         transform_task = PythonOperator(
             task_id=f'transform',
             python_callable=transform,
-            provide_context=True,  # You can also provide context here if needed
+            provide_context=True, 
         )
 
         load_task = PythonOperator(
@@ -58,5 +59,6 @@ with DAG(
             python_callable=load,          
             provide_context=True,  
         )
-
-        extract_task >> transform_task >> load_task  # Set task dependencies
+        
+        # Defino el orden de las tareas en el DAG
+        extract_task >> transform_task >> load_task  

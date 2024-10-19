@@ -1,14 +1,12 @@
 import requests
 import pandas as pd
-from datetime import datetime, timedelta
-from airflow.models import Variable
 from airflow.macros import ds_add
 
 def extract_data(idvariable, **context):
     # Calculate the dates
     date = context['ds']
-    hasta = ds_add(date, -1)  # Tienen la misma fecha, porque la idea es que corra de manera diaria
-    desde = hasta  
+    hasta = ds_add(date, -1)  
+    desde = hasta  # Tienen la misma fecha, porque la idea es que corra para un dia especifico.
 
     print('DAG run’s logical date (partition_date): ', date)
     print('Date from the data: ', hasta)
@@ -22,7 +20,7 @@ def extract_data(idvariable, **context):
 
     print("URL: ", url)
 
-    # Make the request
+    # Hago la request
     response = requests.get(url, verify=False)
 
     # Check if the request was successful

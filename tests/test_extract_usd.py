@@ -20,7 +20,7 @@ def test_extract_data_success():
 
         # Contexto de Airflow simulado
         context = {
-            'ds': '2024-10-05'  # Cambia la fecha según sea necesario
+            'ds': '2024-10-05'  
         }
 
         # Llamar a la función
