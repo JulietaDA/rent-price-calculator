@@ -1,9 +1,15 @@
 import pandas as pd
+import os
 
 def transform_data(ti, **context):
-    df = ti.xcom_pull(task_ids='extract_data')
-    if df is None:  # Check if extraction was successful
+    # Recuperar el archivo Parquet transformado desde XCom
+    parquet_file = ti.xcom_pull(task_ids='extract_data')
+    if parquet_file is None:
         raise ValueError("No data extracted. Aborting transformation.")
+
+    # Leer el archivo Parquet
+    df = pd.read_parquet(parquet_file)
+
 
     df.rename(columns={'fecha':'partition_date_usd'}, inplace=True)
 
@@ -17,4 +23,11 @@ def transform_data(ti, **context):
 
     df = df[["casa", "compra", "venta", "partition_date_usd", "partition_date"]]
 
-    return df
+    # Definir el path base relativo al script actual
+    base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    # Construir la ruta donde se guardará el archivo parquet
+    transformed_parquet_path = os.path.join(base_dir, 'data', f"transformed_{context['ds']}.parquet")    
+    df.to_parquet(transformed_parquet_path, index=False)
+    print(f"Transformed data saved to {transformed_parquet_path}")
+
+    return transformed_parquet_path

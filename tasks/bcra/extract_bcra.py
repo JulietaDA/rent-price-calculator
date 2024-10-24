@@ -1,6 +1,7 @@
 import requests
 import pandas as pd
 from airflow.macros import ds_add
+import os
 
 def extract_data(idvariable, **context):
     # Calculate the dates
@@ -29,7 +30,16 @@ def extract_data(idvariable, **context):
         data = response.json()  # Parse the JSON response
         df = pd.DataFrame(data['results'])
         print("df_size: ", df.size)
-        return df
+    
+        # Guardar el dataframe en un archivo Parquet
+        # Definir el path base relativo al script actual
+        base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+        # Construir la ruta donde se guardará el archivo parquet
+        parquet_path = os.path.join(base_dir, 'data', f"{idvariable}_data_{date}.parquet")
+        df.to_parquet(parquet_path, index=False)
+        print(f"Data saved to {parquet_path}")
+        
+        return parquet_path
     else:
         # Raise an exception to fail the task if status code is not 200
         error_message = f"Failed to fetch data. Status code: {response.status_code}, Response: {response.text}"

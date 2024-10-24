@@ -73,7 +73,11 @@ Asegúrate de tener instalados los siguientes programas en tu máquina:
 
 2. **Configurar Variables de Entorno**
 
-    Configura las variables necesarias en un archivo `.env`, incluyendo tus credenciales.
+   Configura tus credenciales de la base de datos de Redshift en un archivo `.env`.
+   ```
+   DB_USER=your_user_name
+   DB_PASSWORD=your_password
+   ```
 
 
 3. **Construir y levantar los Contenedores**

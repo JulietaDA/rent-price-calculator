@@ -1,9 +1,8 @@
-import pandas as pd
-from airflow.hooks.postgres_hook import PostgresHook
 import os
 import yaml
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+import pandas as pd
 
 def load_data_to_redshift(table_sufix, ti, **context):
     # Cargar variables de entorno desde el archivo .env
@@ -22,14 +21,17 @@ def load_data_to_redshift(table_sufix, ti, **context):
     db_password = os.getenv('DB_PASSWORD')  # Información sensible desde variables de entorno
 
     # Definir esquema y nombres de tablas
-    schema_name = f"{db_user}_schema"  
+    schema_name = f"2024_julieta_de_antonio_schema"  
     table_name = f"usd_{table_sufix}" 
     print(f"Table name: {table_name}")
 
-    # Obtener el DataFrame de XCom
-    df = ti.xcom_pull(task_ids='transform_data')
-    if df is None:  # Verificar si la extracción fue exitosa
-        raise ValueError("No se extrajeron datos. Abortando la transformación.")
+    # Recuperar el archivo Parquet transformado desde XCom
+    transformed_parquet_file = ti.xcom_pull(task_ids='transform_data')
+    if transformed_parquet_file is None:
+        raise ValueError("No transformed data available. Aborting load.")
+
+    # Leer el archivo Parquet transformado
+    df = pd.read_parquet(transformed_parquet_file)
 
     partition_date = df['partition_date'].unique()[0]
     print('partition_date: ', partition_date)
