@@ -1,20 +1,22 @@
 import pandas as pd
 from airflow.models import Variable
+import os
 
 def transform(ti, **context):
-    table_icl, table_usd_oficial, table_ipc, table_usd_blue, table_usd_mep = ti.xcom_pull(task_ids='extract')
+    # Obtener las rutas de los archivos Parquet desde XCom
+    parquet_paths = ti.xcom_pull(task_ids='extract')
+    if parquet_paths is None:
+        raise ValueError("No data extracted. Aborting transformation.")
+
+    # Leer cada archivo Parquet en un DataFrame
+    dataframes = {}
+    for key, parquet_file in parquet_paths.items():
+        print(key)
+        dataframes[key] = pd.read_parquet(parquet_file)
 
     # Obtener la variable de pago inicial desde Airflow
     pago_inicial = float(Variable.get("pago_inicial"))
 
-    # Definir un diccionario para los DataFrames y sus sufijos
-    dataframes = {
-        'df_icl': table_icl,
-        'df_oficial': table_usd_oficial,
-        'df_ipc': table_ipc,
-        'df_blue': table_usd_blue,
-        'df_mep': table_usd_mep
-    }
 
     # Concatenar DataFrames y agregar sufijos
     concatenated_df = pd.concat(
@@ -60,4 +62,11 @@ def transform(ti, **context):
     print(f"Head: {concatenated_df.head()}")    
     print(f"Shape: {concatenated_df.shape}")
 
-    return concatenated_df
+    # Definir el path base relativo al script actual
+    base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+    # Construir la ruta donde se guardará el archivo parquet
+    transformed_parquet_path = os.path.join(base_dir, 'data', f"transformed_{context['ds']}.parquet")    
+    concatenated_df.to_parquet(transformed_parquet_path, index=False)
+    print(f"Transformed data saved to {transformed_parquet_path}")
+
+    return transformed_parquet_path

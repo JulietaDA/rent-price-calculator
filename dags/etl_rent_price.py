@@ -1,9 +1,7 @@
 import os
 import sys
-import json
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.models import Variable
 from datetime import datetime
 
 # Agrego el directorio principal al path para poder importar módulos de la carpeta tasks
@@ -14,22 +12,13 @@ from tasks.rent.extract import extract
 from tasks.rent.transform import transform
 from tasks.rent.load import load
 
-# Función para cargar variables desde un archivo JSON a las variables de Airflow
-def load_variables_from_json(file_path):
-    with open(file_path, 'r') as file:
-        variables = json.load(file)
-        for key, value in variables.items():
-            Variable.set(key, value) 
-
-# Cargar variables de entorno desde el archivo JSON
-load_variables_from_json('./airflow_variables/airflow_variables_rent.json')
 
 # Definir el DAG
 default_args = {
     'owner': 'julietada',
     'description': f'Calculate the rent for the period using variables and previous DAG results',
     'depends_on_past': False,
-    'start_date': datetime(2024, 2, 2),
+    'start_date': datetime(2024, 4, 1),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 0, 
@@ -38,9 +27,10 @@ default_args = {
 with DAG(
         'calculate_rent_price',
         default_args=default_args,
-        schedule_interval="0 9 5 */2 *",
+        schedule_interval="0 9 5 2,4,6,8,10,12 *",
         description='Calculate the rent for the period using variables and previous DAG results',
-        catchup=True) as dag:
+        catchup=True,
+        max_active_runs=1,) as dag:
 
         extract_task = PythonOperator(
             task_id=f'extract',

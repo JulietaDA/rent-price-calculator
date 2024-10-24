@@ -1,4 +1,6 @@
 {
+    "pago_inicial": 450000,
+    "fecha_inicio": "2024-02-01",
     "airflow_variables_bcra": {
         "usdOficial": {
             "idvariable": "4",
@@ -14,6 +16,18 @@
             "idvariable": "40",
             "schedule": "0 20 * * *",
             "table_sufix": "icl"
+        }
+    },
+    "airflow_variables_usd": {
+        "blue": {
+            "casa": "blue",
+            "schedule": "0 20 * * *", 
+            "table_sufix": "blue"
+        },
+        "mep": {
+            "casa": "bolsa",
+            "schedule": "0 20 * * *",
+            "table_sufix": "mep"
         }
     }
 }

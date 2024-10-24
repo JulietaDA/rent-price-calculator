@@ -1,6 +1,5 @@
 import os
 import sys
-import json
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.models import Variable
@@ -13,17 +12,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from tasks.usd.extract_usd import extract_data
 from tasks.usd.transform_usd import transform_data
 from tasks.usd.load_usd import load_data_to_redshift
-
-# Función para cargar variables relacionadas con usd paralelo desde un archivo JSON a las variables de Airflow
-def load_usd_variables_from_json(file_path):
-    with open(file_path, 'r') as file:
-        variables = json.load(file)
-        if "airflow_variables_usd" in variables:
-            Variable.delete("airflow_variables_usd")  # Elimina la variable existente en Airflow si existe
-            Variable.set("airflow_variables_usd", json.dumps(variables["airflow_variables_usd"])) # Configura la nueva variable
-
-# Cargar variables de entorno desde el archivo JSON
-load_usd_variables_from_json('./airflow_variables/airflow_variables_usd.json')
 
 # Para cada variable de BCRA, crear un DAG dinámico
 variables_usd = Variable.get("airflow_variables_usd", deserialize_json=True)

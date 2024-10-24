@@ -1,6 +1,5 @@
 import os
 import sys
-import json
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
 from airflow.models import Variable
@@ -13,17 +12,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from tasks.bcra.extract_bcra import extract_data
 from tasks.bcra.transform_bcra import transform_data
 from tasks.bcra.load_bcra import load_data_to_redshift
-
-# Función para cargar variables relacionadas con BCRA desde un archivo JSON a las variables de Airflow
-def load_bcra_variables_from_json(file_path):
-    with open(file_path, 'r') as file:
-        variables = json.load(file)
-        if "airflow_variables_bcra" in variables:
-            Variable.delete("airflow_variables_bcra")  # Elimina la variable existente en Airflow si existe
-            Variable.set("airflow_variables_bcra", json.dumps(variables["airflow_variables_bcra"])) # Configura la nueva variable
-
-# Cargar variables de entorno desde el archivo JSON
-load_bcra_variables_from_json('./airflow_variables/airflow_variables_bcra.json')
 
 # Para cada variable de BCRA, crear un DAG dinámico
 variables_bcra = Variable.get("airflow_variables_bcra", deserialize_json=True)

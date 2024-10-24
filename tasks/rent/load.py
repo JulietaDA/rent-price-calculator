@@ -1,9 +1,8 @@
-import pandas as pd
-from airflow.hooks.postgres_hook import PostgresHook
 import os
 import yaml
 from dotenv import load_dotenv
 from sqlalchemy import create_engine, text
+import pandas as pd
 
 def load(ti, **context):
     # Cargar variables de entorno desde el archivo .env
@@ -22,15 +21,19 @@ def load(ti, **context):
     db_password = os.getenv('DB_PASSWORD')  # Información sensible desde variables de entorno
 
     # Definir esquema y nombres de tablas
-    schema_name = f"{db_user}_schema" 
+    schema_name = f"2024_julieta_de_antonio_schema" 
     table_name = f"alquiler" 
 
     # Obtener el DataFrame de XCom
-    df = ti.xcom_pull(task_ids='transform')
-    if df is None:  # Verificar que no este vacio
-        raise ValueError("No se extrajeron datos. Abortando la transformación.")
+    # Recuperar el archivo Parquet transformado desde XCom
+    transformed_parquet_file = ti.xcom_pull(task_ids='transform')
+    if transformed_parquet_file is None:
+        raise ValueError("No transformed data available. Aborting load.")
 
-    partition_date = df['partition_date'].unique()[0]
+    # Leer el archivo Parquet transformado
+    df = pd.read_parquet(transformed_parquet_file)
+
+    partition_date = df['partition_date'].max()
     print('partition_date: ', partition_date)
 
     # Crear la URL de conexión 

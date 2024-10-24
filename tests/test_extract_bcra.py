@@ -1,6 +1,4 @@
 import pytest
-import requests
-import pandas as pd
 from unittest.mock import patch
 from tasks.bcra.extract_bcra import extract_data 
 

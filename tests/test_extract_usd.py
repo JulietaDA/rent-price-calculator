@@ -1,5 +1,4 @@
 import pytest
-import requests
 from unittest.mock import patch
 from tasks.usd.extract_usd import extract_data
 
